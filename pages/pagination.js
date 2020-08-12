@@ -1,9 +1,11 @@
 import { Card, Button, Col, Row } from "antd";
 import { useSWRInfinite } from "swr";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const fetcher = (...args) => fetch(...args).then((res) => res.json());
 
 const { Meta } = Card;
+const PAGE_SIZE = 20;
 
 const getKey = (pageIndex, previousPageData) => {
   console.log("getKey", previousPageData, pageIndex);
@@ -13,15 +15,26 @@ const getKey = (pageIndex, previousPageData) => {
 };
 
 export default function Home() {
-  const { data, error, size, setSize } = useSWRInfinite(getKey, fetcher);
+  const { data, error, mutate, size, setSize, isValidating } = useSWRInfinite(
+    (index) => `/api/data?page=${index + 1}`,
+    fetcher
+  );
 
-  if (error) return <div>failed to load</div>;
-  if (!data) return <div>loading...</div>;
+  const items = data ? [].concat(...data) : [];
+  const isEmpty = data?.[0]?.length === 0;
+  const hasMore = (data && data[data.length-1].info && data[data.length-1].info.next!==null);
 
   return (
     <div style={{ marginTop: 100, padding: "15px" }}>
+      <InfiniteScroll
+          dataLength={items.length}
+          next={() => setSize(size + 1)}
+          hasMore={hasMore}
+          loader={<h4>Loading...</h4>}>
+
       <Row gutter={16}>
-        {data.map((pageData) =>
+        {isEmpty ? <p>Yay, no characters found.</p> : null}
+        {items.map((pageData) =>
           pageData.results.map((item) => (
             <Col span={4}>
               <Card hoverable cover={<img alt={item.name} src={item.image} />}>
@@ -32,14 +45,7 @@ export default function Home() {
           ))
         )}
       </Row>
-      <Button
-        type="primary"
-        onClick={(page) => {
-          setSize(size + 1);
-        }}
-      >
-        Load more
-      </Button>
+      </InfiniteScroll>
     </div>
   );
 }

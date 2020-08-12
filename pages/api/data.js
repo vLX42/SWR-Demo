@@ -5,7 +5,7 @@ export default async function getShips(req, res) {
       } = req
   async function getData() {
     try {
-      let url = `https://rickandmortyapi.com/api/character/?page=${page+1}`;
+      let url = `https://rickandmortyapi.com/api/character/?page=${page}`;
 
       const response = await fetch(url, {
         method: 'GET',
@@ -24,5 +24,5 @@ export default async function getShips(req, res) {
   let data = await getData();
 
 
-  return setTimeout(() => res.json({...data, lastUpdate: new Date().toLocaleString() } ), 2000)
+  return setTimeout(() => res.json({...data, lastUpdate: new Date().toLocaleString() } ), page ? 1000 : 2000)
 }
